@@ -10,6 +10,7 @@ public:
 
     static bool AscendingOrder(const WZQPoint &lhs, const WZQPoint &rhs);
     static bool DescendingOrder(const WZQPoint &lhs, const WZQPoint &rhs);
+    bool operator==(const WZQPoint &rhs) const;
 
     void stdPrint();
 private:
@@ -31,6 +32,10 @@ inline WZQPoint::WZQPoint(const int &x_, const int &y_, const int &score_) {
     x = x_;
     y = y_;
     score = score_;
+}
+
+inline bool WZQPoint::operator==(const WZQPoint &rhs) const {
+    return x == rhs.x && y == rhs.y;
 }
 
 inline bool WZQPoint::AscendingOrder(const WZQPoint &lhs, const WZQPoint &rhs) {

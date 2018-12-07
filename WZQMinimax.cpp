@@ -12,20 +12,19 @@ WZQMinimax::WZQMinimax(WZQBoard &board, const WZQPlayer &who)
 
 WZQMinimax::~WZQMinimax() {
     delete searchedBoards_;
-    if (curBoardInfo_.choices_ != nullptr) 
-        delete curBoardInfo_.choices_;
 }
 
 void WZQMinimax::Minimax_() {
-    for (int i = 2; i <= maxDepth_; i++) {
+    int i;
+    for (i = 1; i <= maxDepth_; i++) {
         int eval = IDS_(who_, i, -scoreInf_, scoreInf_);
         if (eval >= victoryEval_) break;
     }
+    printf("ending with depth:%d\n", i);
 
-    auto &choices = curBoardInfo_.choices_;
-    if (choices != nullptr) delete choices;
     curBoardHash_ = board_.GetHash();
-    curBoardInfo_ = searchedBoards_->at(curBoardHash_);
+    curEval_ = searchedBoards_->at(curBoardHash_).eval_;
+    bestMove_ = searchedBoards_->at(curBoardHash_).choices_->at(0);
     // choices = new std::vector<WZQPoint>;
 
     /*
@@ -68,26 +67,35 @@ int WZQMinimax::IDS_(const WZQPlayer &who,
         for (; iterPos != choices->end(); iterPos++) {
             board_.MakeMove(who, *iterPos);
             int subEval = IDS_(enemy, depth-1, alpha, beta);
-            board_.UndoMove();
+            board_.UndoMove(*iterPos);
 
-            iterPos->score = subEval;
+            if (depth > enoughEvalDepth_)
+                iterPos->score = subEval;
             alpha = std::max(subEval, alpha);
-            if (alpha >= beta) { break; }
+            if (alpha >= beta) { 
+                break; 
+                ++iterPos;
+            }
         }
         eval = alpha;
-        std::sort(choices->begin(), ++iterPos, WZQPoint::DescendingOrder);
+        std::sort(choices->begin(), iterPos, WZQPoint::DescendingOrder);
+
     } else {
         for (; iterPos != choices->end(); iterPos++) {
             board_.MakeMove(who, *iterPos);
             int subEval = IDS_(enemy, depth-1, alpha, beta);
-            board_.UndoMove();
+            board_.UndoMove(*iterPos);
 
-            iterPos->score = subEval;
+            if (depth > enoughEvalDepth_)
+                iterPos->score = subEval;
             beta = std::min(subEval, beta);
-            if (alpha >= beta) { break; }
+            if (alpha >= beta) { 
+                break; 
+                ++iterPos;
+            }
         }
         eval = beta;
-        std::sort(choices->begin(), ++iterPos, WZQPoint::AscendingOrder);
+        std::sort(choices->begin(), iterPos, WZQPoint::AscendingOrder);
     }
 
     assert(choices != nullptr);

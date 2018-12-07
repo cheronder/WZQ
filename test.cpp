@@ -3,9 +3,9 @@
 
 int main() {
     WZQBoard *board = new WZQBoard(8);
-    board->ChoiceSettings(20, 2);
+    board->ChoiceSettings(10, 2);
     WZQMinimax *minimax = new WZQMinimax(*board, WZQPlayerWhite);
-    minimax->SearchSettings(2, 8000);
+    minimax->SearchSettings(6, 8000);
     int x, y, m;
     char op;
     WZQPoint pos;
@@ -39,7 +39,9 @@ int main() {
             break;
 
         case 'U':
-            if (!board->UndoMove()) {
+            scanf("%d%d", &x, &y);
+            pos = WZQPoint(x, y);
+            if (!board->UndoMove(pos)) {
                 printf("bad undo!!!\n");
             } else {
                 printf("Undid.\n");
@@ -60,19 +62,15 @@ int main() {
                       << std::endl;
             break;
         
-        case 'E':
-            printf("White evaluates : %d\n", minimax->GetEvaluation());
-            break;
-
         case 'B':
-            printf("White would make :");
+            printf("White would make : ");
             minimax->GetBestMove().stdPrint();
             printf("\n");
             break;
         
         case 'A':
             printf("White evaluates : %d\n", minimax->GetEvaluation());
-            printf("White makes :");
+            printf("White makes : ");
             pos = minimax->GetBestMove();
             pos.stdPrint();
             printf("\n");

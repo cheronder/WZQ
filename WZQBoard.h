@@ -36,7 +36,7 @@ public:
 
     void Reset();
     bool MakeMove(const WZQPlayer &player, const WZQPoint &pos);
-    bool UndoMove();
+    bool UndoMove(const WZQPoint &pos);
 
     WZQPiece GetPiece(const WZQPoint &pos);
     WZQStatus GetStatus();
@@ -53,14 +53,14 @@ private:
     static const int patternScores_[3][6];
 
     const int size_;
-    WZQStatus status_;
     int maxChoice_ = 10;
     int neibOffset_ = 2;
-    WZQHash hash_;
-    WZQPoint lastMove_;
-    bool canUndo_;
-    std::mt19937_64 rndEngine_;
 
+    WZQHash hash_;
+    WZQStatus status_;
+    WZQPoint lastMove_;
+
+    std::mt19937_64 rndEngine_;
     WZQPiece grid_[GRID_MAXSIZE][GRID_MAXSIZE];
     int numNeighbours_[GRID_MAXSIZE][GRID_MAXSIZE];
     WZQHash hashGrid_[GRID_MAXSIZE][GRID_MAXSIZE][3];
