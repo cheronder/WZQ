@@ -36,7 +36,7 @@ public:
 
     void Reset();
     bool MakeMove(const WZQPlayer &player, const WZQPoint &pos);
-    void UndoMove(const WZQPoint &pos);
+    bool UndoMove();
 
     WZQPiece GetPiece(const WZQPoint &pos);
     WZQStatus GetStatus();
@@ -47,6 +47,7 @@ public:
     std::vector<WZQPoint> *GetHeuristicChoices(const WZQPlayer &who);
 
     void StdPrint();
+    int GetLocalScore_(const WZQPlayer &who, const WZQPoint &pos);
 
 private:
     static const int patternScores_[3][6];
@@ -56,6 +57,8 @@ private:
     int maxChoice_ = 10;
     int neibOffset_ = 2;
     WZQHash hash_;
+    WZQPoint lastMove_;
+    bool canUndo_;
     std::mt19937_64 rndEngine_;
 
     WZQPiece grid_[GRID_MAXSIZE][GRID_MAXSIZE];
@@ -67,8 +70,6 @@ private:
     bool IsValidPos_(const int &x);
     bool IsValidPos_(const WZQPoint &pos);
 
-    bool CheckWin_(const WZQPoint &pos);
-    std::vector<WZQPoint> *GetPossibleChoices_();
     int GetLineScore_(const WZQPlayer &who,
                       WZQPoint beginPos, 
                       const int &direction);

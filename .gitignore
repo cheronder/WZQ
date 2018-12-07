@@ -1,0 +1,8 @@
+*.o
+.vscode/
+test.exe
+dump
+input
+output
+gmon.out
+gprofile

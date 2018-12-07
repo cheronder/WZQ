@@ -19,6 +19,7 @@ WZQBoard::~WZQBoard() {}
 
 void WZQBoard::Reset() {
     status_ = WZQStatusTie;
+    canUndo_ = false;
     for (int i = 0; i < size_; i++)
         for (int j = 0; j < size_; j++) {
             grid_[i][j] = WZQPieceBlank;
@@ -40,20 +41,22 @@ bool WZQBoard::MakeMove(const WZQPlayer &player, const WZQPoint &pos) {
     assert(status_ == WZQStatusTie);
     if (GetPiece(pos) != WZQPieceBlank) return false;
     hash_ ^= hashGrid_[pos.x][pos.y][WZQPieceBlank];
+    lastMove_ = pos;
+    canUndo_ = true;
 
     if (player == WZQPlayerBlack) 
         SetPiece_(pos, WZQPieceBlack);
     else
         SetPiece_(pos, WZQPieceWhite);
 
-    if (CheckWin_(pos))
+    if (GetLocalScore_(player, pos) >= patternScores_[0][5])
         status_ = player == WZQPlayerBlack ? WZQStatusBlack : WZQStatusWhite;
         
     for (int i = pos.x - neibOffset_; i <= pos.x + neibOffset_; i++) {
         if (!IsValidPos_(i)) continue;
         for (int j = pos.y - neibOffset_; j <= pos.y + neibOffset_; j++) {
             if (!IsValidPos_(j)) continue;
-            numNeighbours_[i][j] += 5 - 2 * std::max(abs(i - pos.x), abs(j - pos.y));
+            numNeighbours_[i][j] += 1;
         }
     }
 
@@ -61,37 +64,25 @@ bool WZQBoard::MakeMove(const WZQPlayer &player, const WZQPoint &pos) {
     return true;
 }
 
-void WZQBoard::UndoMove(const WZQPoint &pos) {
-    assert(GetPiece(pos) != WZQPieceBlank);
+bool WZQBoard::UndoMove() {
+    // assert(GetPiece(pos) != WZQPieceBlank);
+    if (!canUndo_ || GetPiece(lastMove_) == WZQPieceBlank) 
+        return false;
+    WZQPoint &pos = lastMove_;
     hash_ ^= hashGrid_[pos.x][pos.y][GetPiece(pos)];
-    SetPiece_(pos, WZQPieceBlank);
+    status_ = WZQStatusTie;
 
-    if (!CheckWin_(pos)) status_ = WZQStatusTie;
+    SetPiece_(pos, WZQPieceBlank);
     for (int i = pos.x - neibOffset_; i <= pos.x + neibOffset_; i++) {
         if (!IsValidPos_(i)) continue;
         for (int j = pos.y - neibOffset_; j <= pos.y + neibOffset_; j++) {
             if (!IsValidPos_(j)) continue;
-            numNeighbours_[i][j] -= 5 - 2 * std::max(abs(i - pos.x), abs(j - pos.y));
-            // numNeighbours_[i][j] -= 5 - abs(i - pos.x) + abs(j - pos.y);
+            numNeighbours_[i][j] -= 1;
         }
     }
 
     hash_ ^= hashGrid_[pos.x][pos.y][WZQPieceBlank];
-}
-
-bool WZQBoard::CheckWin_(const WZQPoint &pos) {
-    WZQPoint tempPos;
-    WZQPiece cur = GetPiece(pos);
-    if (cur == WZQPieceBlank) return false;
-    int count[8] = {};
-
-    for (int i = 0; i < 8; i++) {
-        tempPos = pos;
-        while(IsValidPos_(tempPos.Move_(i)) && GetPiece(tempPos) == cur)
-            count[i/2]++;
-        if (count[i/2] >= 4) return true;
-    }
-    return false;
+    return true;
 }
 
 void WZQBoard::StdPrint() {
@@ -142,20 +133,23 @@ void WZQBoard::StdPrint() {
     }
 }
 
-std::vector<WZQPoint> *WZQBoard::GetPossibleChoices_() {
+std::vector<WZQPoint> *WZQBoard::GetHeuristicChoices(const WZQPlayer &who) {
     std::vector<WZQPoint> *ret = new std::vector<WZQPoint>;
+
     for (int i = 0; i < size_; i++)
         for (int j = 0; j < size_; j++)
-            if (numNeighbours_[i][j] > 0 && grid_[i][j] == WZQPieceBlank) 
-                ret->push_back(WZQPoint(i, j, numNeighbours_[i][j]));
-    return ret;
-}
+            if (numNeighbours_[i][j] > 0 && grid_[i][j] == WZQPieceBlank) {
+                WZQPoint temp = WZQPoint(i, j);
+                int HScore;
+                WZQPlayer enemy = (WZQPlayer) (1 - (int) who);
+                HScore += GetLocalScore_(who, temp);
+                HScore -= GetLocalScore_(enemy, temp) / 8;
+                temp.score = HScore;
+                ret->push_back(temp);
+            }
 
-std::vector<WZQPoint> *WZQBoard::GetHeuristicChoices(const WZQPlayer &who) {
-    std::vector<WZQPoint> *ret = GetPossibleChoices_();
-    // shuffle(ret->begin(), ret->end(), rndEngine_);
     sort(ret->begin(), ret->end(), WZQPoint::DescendingOrder);
-    if (ret->size() > (WZQHash) maxChoice_) ret->resize(maxChoice_);
+    if (ret->size() > (size_t) maxChoice_) ret->resize(maxChoice_);
     return ret;
 }
 
@@ -209,4 +203,29 @@ int WZQBoard::GetLineScore_(const WZQPlayer &who,
 
     if (who == WZQPlayerBlack) return scores[WZQPieceBlack] - scores[WZQPieceWhite];
     else                       return scores[WZQPieceWhite] - scores[WZQPieceBlack];
+}
+
+int WZQBoard::GetLocalScore_(const WZQPlayer &who, const WZQPoint &pos) {
+    WZQPoint tempPos;
+    WZQPiece cur = who == WZQPlayerBlack ? WZQPieceBlack : WZQPieceWhite;
+    if (cur == WZQPieceBlank) return false;
+
+    int score = 0;
+    int count[4] = {1, 1, 1, 1};
+    int block[4] = {};
+
+    for (int i = 0; i < 8; i++) {
+        tempPos = pos;
+        while (IsValidPos_(tempPos.Move_(i)) && GetPiece(tempPos) == cur)
+            count[i/2]++;
+        if (!IsValidPos_(tempPos) || GetPiece(tempPos) != WZQPieceBlank)
+            block[i/2]++;
+    }
+
+    for (int i = 0; i < 4; i++) {
+        if (count[i] > 5) score += patternScores_[0][5];
+        else score += patternScores_[block[i]][count[i]];
+    }
+
+    return score;
 }

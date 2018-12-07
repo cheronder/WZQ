@@ -17,7 +17,7 @@ WZQMinimax::~WZQMinimax() {
 }
 
 void WZQMinimax::Minimax_() {
-    for (int i = 1; i <= maxDepth_; i++) {
+    for (int i = 2; i <= maxDepth_; i++) {
         int eval = IDS_(who_, i, -scoreInf_, scoreInf_);
         if (eval >= victoryEval_) break;
     }
@@ -68,7 +68,7 @@ int WZQMinimax::IDS_(const WZQPlayer &who,
         for (; iterPos != choices->end(); iterPos++) {
             board_.MakeMove(who, *iterPos);
             int subEval = IDS_(enemy, depth-1, alpha, beta);
-            board_.UndoMove(*iterPos);
+            board_.UndoMove();
 
             iterPos->score = subEval;
             alpha = std::max(subEval, alpha);
@@ -80,7 +80,7 @@ int WZQMinimax::IDS_(const WZQPlayer &who,
         for (; iterPos != choices->end(); iterPos++) {
             board_.MakeMove(who, *iterPos);
             int subEval = IDS_(enemy, depth-1, alpha, beta);
-            board_.UndoMove(*iterPos);
+            board_.UndoMove();
 
             iterPos->score = subEval;
             beta = std::min(subEval, beta);

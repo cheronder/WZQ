@@ -5,7 +5,7 @@ int main() {
     WZQBoard *board = new WZQBoard(8);
     board->ChoiceSettings(20, 2);
     WZQMinimax *minimax = new WZQMinimax(*board, WZQPlayerWhite);
-    minimax->SearchSettings(6, 8000);
+    minimax->SearchSettings(2, 8000);
     int x, y, m;
     char op;
     WZQPoint pos;
@@ -18,7 +18,7 @@ int main() {
             if (!board->MakeMove((WZQPlayer) m, pos))
                 printf("bad move!!!\n");
             else {
-                printf("move at ");
+                printf("%s moved at", m == 0 ? "Black" : "White");
                 pos.stdPrint();
                 printf("\n");
             }
@@ -36,11 +36,15 @@ int main() {
                 printf("White win!!!\n");
                 break;
             }
+            break;
 
         case 'U':
-            scanf("%d%d", &x, &y);
-            pos = WZQPoint(x, y);
-            board->UndoMove(pos);
+            if (!board->UndoMove()) {
+                printf("bad undo!!!\n");
+            } else {
+                printf("Undid.\n");
+            }
+
             break;
 
         case 'P':
@@ -75,6 +79,11 @@ int main() {
             board->MakeMove(WZQPlayerWhite, pos);
             board->StdPrint();
             break;
+        
+        case 'L':
+            scanf("%d%d", &x, &y);
+            pos = WZQPoint(x, y);
+            printf("local Score : %d\n", board->GetLocalScore_(WZQPlayerWhite, pos));
 
         case '\n': break;
         case '\r': break;
