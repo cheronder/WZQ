@@ -123,7 +123,11 @@ void WZQBoard::StdPrint() {
             // else strGrid[i*2+2][j*4+5] = numNeighbours_[i][j]+'0';
 
     for (WZQPoint &pos : *GetHeuristicChoices(WZQPlayerBlack)) {
-        strGrid[pos.x*2+2][pos.y*4+6] = '*';
+        /*
+        strGrid[pos.x*2+2][pos.y*4+4] = pos.score / 100 % 10 + '0';
+        strGrid[pos.x*2+2][pos.y*4+5] = pos.score / 10 % 10 + '0';
+        strGrid[pos.x*2+2][pos.y*4+6] = pos.score / 1 % 10 + '0';
+        */
     }
     
     

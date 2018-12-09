@@ -58,7 +58,7 @@ inline WZQPoint WZQPoint::Find_(const int &direction, const int &dist) {
 }
 
 inline void WZQPoint::stdPrint() {
-    printf("(%4d,%4d)", x, y);
+    printf("(%3d,%3d)", x, y);
 }
 
 #endif

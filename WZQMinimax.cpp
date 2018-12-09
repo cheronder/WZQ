@@ -20,7 +20,7 @@ void WZQMinimax::Minimax_() {
         int eval = IDS_(who_, i, -scoreInf_, scoreInf_);
         if (eval >= victoryEval_) break;
     }
-    printf("ending with depth:%d\n", i);
+    // printf("ending with depth:%d\n", i);
 
     curBoardHash_ = board_.GetHash();
     curEval_ = searchedBoards_->at(curBoardHash_).eval_;
@@ -45,7 +45,8 @@ int WZQMinimax::IDS_(const WZQPlayer &who,
     // board_.StdPrint();
     WZQHash hash = board_.GetHash();
     std::vector<WZQPoint> *choices = nullptr;
-    WZQPlayer enemy = who == WZQPlayerBlack ? WZQPlayerWhite : WZQPlayerBlack;
+    // WZQPlayer enemy = who == WZQPlayerBlack ? WZQPlayerWhite : WZQPlayerBlack;
+    WZQPlayer enemy = who_;
     
     if (board_.GetStatus() != WZQStatusTie)
         return (int) board_.GetStatus() == (int) enemy + 1 ? scoreInf_ : -scoreInf_;

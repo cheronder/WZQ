@@ -4,7 +4,7 @@ all : test
 SRCS = $(wildcard WZQ*.cpp)
 OBJS = $(patsubst %.cpp,%.o,$(SRCS))
 
-CXXFLAGS = -Wall -O0 -g -pg
+CXXFLAGS = -Wall -O2 -g -pg
 CXXC = g++
 test : $(OBJS) test.o
 	$(CXXC) $(CXXFLAGS) $^ -o $@
