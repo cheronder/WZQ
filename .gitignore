@@ -1,7 +1,7 @@
-*.o
 .vscode/
 obj/
-test.exe
+lib/
+
 dump
 input
 output

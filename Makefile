@@ -1,18 +1,16 @@
-VER = debug
+export VER = release
+export CXX = g++
+export AR  = ar
 
-SRCS   = $(notdir $(wildcard src/*.cpp))
-OBJS   = $(SRCS:%.cpp=obj/%.o)
-DEPS   = $(SRCS:%.cpp=obj/%.d)
-LIB    = wzq
-TARGET = $(LIB:%=lib%.a)
+SRCS     = $(wildcard src/*.cpp)
+OBJS     = $(SRCS:src/%.cpp=obj/%.o)
+DEPS     = $(SRCS:src/%.cpp=obj/%.d)
 
-CXX      = g++
-AR       = ar
+TARGET   = lib/libwzq.a
 
-CXXFLAGS = -Wall
+CXXFLAGS = -Wall -MMD
 INCFLAGS = -Iinclude
-LDFLAGS  = -L. -l$(LIB)
-ARFLAGS  = -cru
+ARFLAGS  = -cr
 
 ifeq ($(VER), debug)
 	CXXFLAGS += -O0 -g -pg -DDEBUG
@@ -22,28 +20,26 @@ else
 	LDFLAGS  += -static
 endif
 
-.PHONY : all clean cleanall
+.PHONY : all clean cleanall test
 all : $(TARGET)
 
-test : obj/test.o $(TARGET)
-	$(CXX) $< $(LDFLAGS) -o $@
+test : $(TARGET)
+	make -C test
 
-$(TARGET) : $(filter obj/WZQ%.o, $(OBJS))
-	$(AR) $(ARFLAGS) $@ $^
+$(TARGET) : $(OBJS) | lib
+	$(AR) $(ARFLAGS) $@ $(OBJS)
+
+lib obj :
+	mkdir -p $@
 
 -include $(DEPS)
-obj/%.o : src/%.cpp
-	@mkdir -p obj
-	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c $< -o $@
-
-obj/%.d : src/%.cpp
-	set -e; mkdir -p obj; rm -f $@; \
-	$(CXX) -MM $< $(INCFLAGS) > $@.$$$$; \
-    sed 's,\($*\)\.o[ :]*,obj/\1.o $@ : ,g' < $@.$$$$ > $@; \
-    rm -f $@.$$$$
+obj/%.o : src/%.cpp | obj
+	$(CXX) $(CXXFLAGS) $(INCFLAGS) -c -o $@ $<
 
 clean :
+	make -C test clean
 	rm -rf obj
 
 cleanall :
-	rm -rf test $(TARGET) obj
+	make -C test cleanall
+	rm -rf lib obj
